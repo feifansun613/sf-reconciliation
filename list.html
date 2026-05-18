@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨境收款对账系统 · 对账明细</title>
+<style>
+  :root{
+    --bg:#f4f4f2;--card:#fff;--card-2:#fafafa;
+    --ink-0:#0a0a0c;--ink-1:#18181b;--ink-2:#52525b;--ink-3:#8a8a93;--ink-4:#c4c4ca;
+    --line:#e8e8eb;--line-soft:#f1f1f3;
+    --sf-black:#09090b;--sf-red:#d11a2a;--sf-red-2:#b3151f;
+    --sf-red-soft:#fdf2f3;--sf-red-line:#f5cdd1;
+    --green:#0f7a4d;--green-soft:#e8f5ee;
+    --amber:#b06a0e;--amber-soft:#fbf2dc;
+    --blue:#1f56b0;--blue-soft:#e9f0fa;
+    --r-lg:16px;--r-md:12px;--r-sm:8px;
+    --sh-1:0 1px 2px rgba(15,15,20,.04), 0 0 0 1px rgba(15,15,20,.04);
+    --sh-2:0 8px 24px rgba(15,15,20,.06), 0 1px 2px rgba(15,15,20,.04);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);color:var(--ink-1);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;font-feature-settings:"tnum" on;}
+  .app{display:flex;min-height:100vh;}
+
+  /* ===== Side ===== */
+  .side{width:220px;background:var(--sf-black);color:#fff;flex-shrink:0;display:flex;flex-direction:column;padding:22px 0 18px;position:relative;}
+  .side::before{content:"";position:absolute;left:0;top:0;width:2px;height:48px;background:linear-gradient(180deg,var(--sf-red),transparent);}
+  .brand{display:flex;align-items:center;gap:11px;padding:0 22px 22px;border-bottom:1px solid rgba(255,255,255,.07);}
+  .brand .logo{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.06);overflow:hidden;}
+  .brand .logo img{width:100%;height:100%;object-fit:contain;}
+  .brand .bt{font-size:14px;font-weight:700;letter-spacing:.4px;}
+  .brand .bs{font-size:11px;color:rgba(255,255,255,.42);margin-top:2px;letter-spacing:.3px;}
+  .nav{padding:14px 12px;flex:1;}
+  .nav-label{font-size:10.5px;color:rgba(255,255,255,.32);padding:14px 12px 6px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;color:rgba(255,255,255,.6);font-size:13.5px;cursor:default;margin-bottom:2px;transition:.15s;}
+  .nav-item.clickable{cursor:pointer;}
+  .nav-item.clickable:hover{background:rgba(255,255,255,.05);color:#fff;}
+  .nav-item.active{background:rgba(209,26,42,.95);color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(209,26,42,.32),inset 0 1px 0 rgba(255,255,255,.12);}
+  .nav-item .ic{width:17px;height:17px;flex-shrink:0;}
+  .side-foot{padding:14px 16px;margin:0 8px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:11px;}
+  .side-foot .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#3a3f4c,#1f2128);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;}
+  .side-foot .nm{font-size:12.5px;font-weight:600;}
+  .side-foot .rl{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px;}
+
+  /* ===== Main ===== */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{height:64px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;}
+  .crumb{font-size:13px;color:var(--ink-3);font-weight:500;}
+  .crumb b{color:var(--ink-1);font-weight:600;}
+  .crumb .bk{color:var(--ink-2);cursor:pointer;}
+  .crumb .bk:hover{color:var(--ink-0);text-decoration:underline;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .btn{font-size:13px;border-radius:9px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink-1);display:flex;align-items:center;gap:7px;font-weight:500;transition:.15s;}
+  .btn:hover{border-color:var(--ink-3);}
+  .btn.dark{background:linear-gradient(180deg,#1c1c20,var(--sf-black));color:#fff;border-color:var(--sf-black);}
+  .btn.dark:hover{opacity:.92;}
+  .content{padding:28px 32px 44px;overflow-y:auto;}
+  .page-head{margin-bottom:18px;}
+  .page-head h1{font-size:22px;font-weight:700;letter-spacing:-.3px;color:var(--ink-0);}
+  .page-head p{font-size:13px;color:var(--ink-3);margin-top:5px;}
+
+  /* ===== 筛选栏 ===== */
+  .filter{background:var(--card);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:14px;position:relative;z-index:100;box-shadow:var(--sh-1);}
+  .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .fsel{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-1);border:1px solid var(--line);border-radius:9px;padding:8px 12px;cursor:pointer;background:#fff;white-space:nowrap;font-weight:500;transition:.15s;}
+  .fsel:hover{border-color:var(--ink-3);}
+  .fsel .fl{color:var(--ink-3);font-weight:500;}
+  .fsel.act{border-color:var(--sf-red);background:var(--sf-red-soft);color:var(--sf-red);box-shadow:0 0 0 3px rgba(209,26,42,.08);}
+  .fsel.act .fl{color:#a02029;}
+  .fsearch{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:8px 12px;background:#fff;transition:.15s;}
+  .fsearch:focus-within{border-color:var(--ink-3);box-shadow:0 0 0 3px rgba(15,15,20,.04);}
+  .fsearch input{border:none;outline:none;flex:1;font-size:13px;background:transparent;font-family:inherit;color:var(--ink-1);}
+  .fsave{font-size:12.5px;color:var(--ink-2);cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;font-weight:500;}
+  .fsave:hover{color:var(--ink-0);}
+
+  /* 下拉 */
+  .fwrap{position:relative;}
+  .fmenu{position:absolute;top:calc(100% + 6px);left:0;z-index:200;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 32px rgba(0,0,0,.12);padding:6px;min-width:188px;display:none;}
+  .fmenu.open{display:block;animation:fadein .14s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+  .fopt{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;color:var(--ink-1);cursor:pointer;white-space:nowrap;}
+  .fopt:hover{background:var(--card-2);}
+  .fopt.sel{color:var(--sf-red);font-weight:600;}
+  .fopt .fck{width:15px;height:15px;border-radius:4px;flex-shrink:0;border:1.5px solid var(--ink-4);display:flex;align-items:center;justify-content:center;}
+  .fopt.sel .fck{background:var(--sf-red);border-color:var(--sf-red);}
+  .fopt .fdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--ink-4);}
+  .fopt.sel .fdot{display:none;}
+  .fmenu-foot{display:flex;justify-content:space-between;padding:8px 10px 4px;margin-top:4px;border-top:1px solid var(--line-soft);}
+  .fmenu-foot span{font-size:12px;cursor:pointer;font-weight:500;}
+  .fmenu-foot .clr{color:var(--ink-3);}
+  .fmenu-foot .clr:hover{color:var(--ink-0);}
+  .fmenu-foot .apl{color:var(--sf-red);font-weight:600;}
+
+  /* ===== 状态条 ===== */
+  .statbar{display:flex;align-items:center;gap:24px;padding:14px 20px;background:var(--card);border-radius:var(--r-md);margin-bottom:14px;position:relative;z-index:1;box-shadow:var(--sh-1);}
+  .statbar .si{font-size:12.5px;color:var(--ink-3);display:flex;align-items:center;gap:7px;font-weight:500;}
+  .statbar .si b{font-size:14.5px;color:var(--ink-0);font-weight:700;font-variant-numeric:tabular-nums;}
+  .statbar .si.r b{color:var(--sf-red);}
+  .statbar .si.a b{color:var(--amber);}
+  .statbar .si.g b{color:var(--green);}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .statbar .divline{width:1px;height:18px;background:var(--line);}
+
+  /* ===== 表格 ===== */
+  .tablewrap{background:var(--card);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{font-size:11.5px;color:var(--ink-3);font-weight:600;text-align:left;padding:13px 14px;background:#fafbfc;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.3px;text-transform:uppercase;}
+  thead th:first-child{padding-left:20px;}
+  tbody td{padding:14px 14px;border-bottom:1px solid var(--line-soft);font-size:13px;vertical-align:middle;}
+  tbody td:first-child{padding-left:20px;}
+  tbody tr{cursor:pointer;transition:.12s;}
+  tbody tr:hover{background:#fbfbfc;}
+  tbody tr:last-child td{border-bottom:none;}
+  .ck{width:15px;height:15px;border:1.5px solid var(--ink-4);border-radius:4px;cursor:pointer;transition:.12s;}
+  .ck:hover{border-color:var(--sf-red);}
+  .ck.on{background:var(--sf-red);border-color:var(--sf-red);display:flex;align-items:center;justify-content:center;}
+  tbody tr.picked{background:#f7faff !important;}
+  tbody tr.picked td:first-child{box-shadow:inset 3px 0 0 var(--sf-red);}
+
+  /* 徽标 */
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:99px;white-space:nowrap;letter-spacing:.1px;}
+  .badge.green{background:var(--green-soft);color:#0d6c43;}
+  .badge.amber{background:var(--amber-soft);color:#8c530a;}
+  .badge.red{background:var(--sf-red-soft);color:#a02029;}
+  .badge.blue{background:var(--blue-soft);color:#194691;}
+
+  /* 平台 */
+  .plat{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-1);font-weight:500;}
+  .plat .pi{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;letter-spacing:0;}
+  .amt{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink-0);letter-spacing:-.2px;}
+  .amt .cs{font-size:11px;color:var(--ink-3);font-weight:600;margin-right:1px;}
+  .ordno{color:var(--ink-2);font-variant-numeric:tabular-nums;font-size:12.5px;font-family:"SF Mono",ui-monospace,Menlo,monospace;}
+  .match-txt{font-size:12.5px;}
+  .match-txt.ok{color:var(--ink-1);}
+  .match-txt.bad{color:var(--sf-red);font-weight:600;}
+  .match-txt.wait{color:var(--amber);font-weight:600;}
+  .match-txt .sub{display:block;font-size:11px;color:var(--ink-4);font-weight:400;margin-top:2px;}
+  .rowbtn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:.15s;}
+  .rowbtn.view{border:1px solid var(--line);color:var(--ink-1);background:#fff;}
+  .rowbtn.view:hover{border-color:var(--ink-3);background:var(--card-2);}
+  .rowbtn.deal{background:var(--sf-red);color:#fff;box-shadow:0 4px 10px rgba(209,26,42,.22);}
+  .rowbtn.deal:hover{background:var(--sf-red-2);}
+  .rowbtn.link{background:var(--amber);color:#fff;box-shadow:0 4px 10px rgba(176,106,14,.22);}
+  .rowbtn.link:hover{opacity:.92;}
+
+  /* 空状态 */
+  .emptyrow td{padding:54px 14px !important;text-align:center;color:var(--ink-3);}
+  .emptyrow .ei{width:50px;height:50px;border-radius:50%;background:var(--card-2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+  .emptyrow .et{font-size:14px;font-weight:600;color:var(--ink-1);}
+  .emptyrow .ed{font-size:12.5px;margin-top:4px;}
+
+  /* 批量操作 */
+  .batchbar{display:flex;align-items:center;gap:14px;padding:14px 20px;border-top:1px solid var(--line);background:#fafbfc;}
+  .batchbar .bsel{font-size:12.5px;color:var(--ink-3);}
+  .batchbar .bsel b{color:var(--ink-0);font-variant-numeric:tabular-nums;}
+  .bbtn{font-size:12.5px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink-1);cursor:pointer;font-weight:500;transition:.15s;}
+  .bbtn:hover{border-color:var(--ink-3);background:var(--card-2);}
+  .pagi{margin-left:auto;display:flex;align-items:center;gap:5px;}
+  .pagi .pg{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:var(--ink-1);cursor:pointer;font-weight:500;transition:.15s;}
+  .pagi .pg:hover{border-color:var(--ink-3);}
+  .pagi .pg.on{background:var(--sf-black);color:#fff;border-color:var(--sf-black);}
+
+  .reveal{opacity:0;transform:translateY(10px);animation:rise .5s ease forwards;}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+  .d1{animation-delay:.04s;}.d2{animation-delay:.1s;}.d3{animation-delay:.16s;}.d4{animation-delay:.22s;}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);background:var(--sf-black);color:#fff;font-size:13px;padding:12px 22px;border-radius:11px;z-index:999;box-shadow:0 12px 32px rgba(0,0,0,.22);display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.26s ease;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .ti{width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+  .sign-float{position:fixed;right:18px;bottom:14px;z-index:900;font-size:11px;color:var(--ink-4);pointer-events:none;}
+  .sign-float b{color:var(--ink-3);font-weight:600;}
+  svg{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><img src="assets/sf-logo-round.png" alt="SF"></div>
+      <div><div class="bt">顺丰跨境支付</div><div class="bs">商户工作台</div></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">资金管理</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>账户总览</div>
+      <div class="nav-item active clickable" onclick="goHome()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>对账中心</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>结售汇</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>收付款</div>
+      <div class="nav-label">经营</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>数据报表</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>设置</div>
+    </nav>
+    <div class="side-foot">
+      <div class="av">孙</div>
+      <div><div class="nm">跨境贸易公司名称</div><div class="rl">财务负责人</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb"><span class="bk" onclick="goHome()">对账工作台</span> / <b>对账明细</b></div>
+      <div class="topbar-right">
+        <div class="btn" onclick="exportData()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>导出对账单</div>
+        <div class="btn dark" onclick="openAI()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H6a2 2 0 01-2-2v-1H3a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/></svg>AI 对账助手</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-head reveal d1">
+        <h1>对账明细</h1>
+        <p>系统自动撮合收款资金与订单 · 异常交易已为你标出</p>
+      </div>
+
+      <div class="filter reveal d1">
+        <div class="filter-row">
+          <div class="fwrap">
+            <div class="fsel" onclick="toggleMenu('time')">
+              <span class="fl">时间</span> <span id="lbl-time">2026年5月</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="fmenu" id="menu-time">
+              <div class="fopt" onclick="pickTime('2026年5月')"><span class="fdot"></span>2026年5月</div>
+              <div class="fopt" onclick="pickTime('2026年4月')"><span class="fdot"></span>2026年4月</div>
+              <div class="fopt" onclick="pickTime('2026年3月')"><span class="fdot"></span>2026年3月</div>
+              <div class="fopt" onclick="pickTime('近3个月')"><span class="fdot"></span>近3个月</div>
+            </div>
+          </div>
+          <div class="fwrap">
+            <div class="fsel" id="sel-ccy" onclick="toggleMenu('ccy')">
+              <span class="fl">币种</span> <span id="lbl-ccy">全部币种</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="fmenu" id="menu-ccy"></div>
+          </div>
+          <div class="fwrap">
+            <div class="fsel" id="sel-status" onclick="toggleMenu('status')">
+              <span class="fl">撮合状态</span> <span id="lbl-status">全部</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="fmenu" id="menu-status"></div>
+          </div>
+          <div class="fwrap">
+            <div class="fsel" id="sel-plat" onclick="toggleMenu('plat')">
+              <span class="fl">来源平台</span> <span id="lbl-plat">全部</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="fmenu" id="menu-plat"></div>
+          </div>
+          <div class="fsearch">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8a93" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input id="searchbox" placeholder="搜索订单号 / 金额" oninput="render()">
+          </div>
+          <div class="fsave" onclick="resetFilters()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8"/><path d="M3 3v5h5"/></svg>
+            重置筛选
+          </div>
+        </div>
+      </div>
+
+      <div class="statbar reveal d2">
+        <div class="si">筛选结果 <b id="stat-total">8</b> 笔交易</div>
+        <div class="divline"></div>
+        <div class="si g"><span class="dot" style="background:var(--green)"></span>已撮合 <b id="stat-ok">4</b></div>
+        <div class="si r"><span class="dot" style="background:var(--sf-red)"></span>撮合异常 <b id="stat-err">2</b></div>
+        <div class="si a"><span class="dot" style="background:var(--amber)"></span>待人工关联 <b id="stat-wait">1</b></div>
+        <div class="si"><span class="dot" style="background:var(--blue)"></span>资金在途 <b id="stat-transit">1</b></div>
+      </div>
+
+      <div class="tablewrap reveal d3">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px"><div class="ck" id="ck-all" onclick="toggleAll()"></div></th>
+              <th>状态</th>
+              <th>交易时间</th>
+              <th>交易流水号</th>
+              <th>来源平台</th>
+              <th>收款金额</th>
+              <th>撮合结果</th>
+              <th style="text-align:right;padding-right:20px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="batchbar">
+          <div class="bsel">已选 <b id="sel-count">0</b> 项 · 当前 <b id="batch-count">8</b> 笔</div>
+          <div class="bbtn" onclick="batchAction('标记已对账')">批量标记已对账</div>
+          <div class="bbtn" onclick="batchAction('导出')">批量导出</div>
+          <div class="bbtn" onclick="batchAction('发起申诉')">批量发起申诉</div>
+          <div class="pagi">
+            <div class="pg" onclick="toast('已是第一页')">‹</div>
+            <div class="pg on">1</div>
+            <div class="pg" onclick="toast('当前为演示数据,仅一页')">›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="ti"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>
+  <span id="toast-msg">操作成功</span>
+</div>
+
+<script>
+  function goHome(){ window.location.href='index.html'; }
+
+  const PLAT = {
+    amazon:{n:'亚马逊', c:'linear-gradient(135deg,#ff9900,#e88200)', i:'A'},
+    web:{n:'独立站', c:'linear-gradient(135deg,#3b82f6,#1f6feb)', i:'S'},
+    tiktok:{n:'TikTok', c:'linear-gradient(135deg,#1f1f1f,#000)', i:'T'},
+    b2b:{n:'B2B外贸', c:'linear-gradient(135deg,#6b7280,#4b5563)', i:'B'}
+  };
+  const PLAT_DOT = {amazon:'#ff9900',web:'#1f6feb',tiktok:'#000',b2b:'#5b6270'};
+  const CCY = {
+    USD:{cs:'$', name:'USD 美元'},
+    EUR:{cs:'€', name:'EUR 欧元'},
+    GBP:{cs:'£', name:'GBP 英镑'},
+    JPY:{cs:'¥', name:'JPY 日元'}
+  };
+  const DATA = {
+    USD:[
+      {st:'error', type:'amount', t:'05-16 09:12', no:'PI20260516-0231', plat:'amazon', amt:'1,288.00', mt:'金额不符', sub:'订单 $1,320 · 差 $32'},
+      {st:'error', type:'nomatch', t:'05-16 08:40', no:'PI20260516-0228', plat:'web', amt:'860.00', mt:'未找到匹配订单', sub:'需人工关联'},
+      {st:'wait', type:'', t:'05-15 19:20', no:'PI20260515-0205', plat:'b2b', amt:'12,400.00', mt:'待关联贸易订单', sub:'需补充合同信息'},
+      {st:'transit', type:'', t:'05-15 16:05', no:'PI20260515-0198', plat:'amazon', amt:'2,150.00', mt:'已匹配订单 · 清算中', sub:'预计今日 18:00 到账'},
+      {st:'ok', type:'', t:'05-15 14:23', no:'PI20260515-0192', plat:'amazon', amt:'88.00', mt:'已匹配订单 #A-100231', sub:''},
+      {st:'ok', type:'', t:'05-15 11:48', no:'PI20260515-0187', plat:'tiktok', amt:'356.40', mt:'已匹配订单 #T-88102', sub:''},
+      {st:'ok', type:'', t:'05-14 22:10', no:'PI20260514-0176', plat:'web', amt:'1,024.00', mt:'已匹配订单 #W-20451', sub:''},
+      {st:'ok', type:'', t:'05-14 17:33', no:'PI20260514-0170', plat:'amazon', amt:'212.80', mt:'已匹配订单 #A-100198', sub:''}
+    ],
+    EUR:[
+      {st:'error', type:'amount', t:'05-16 10:30', no:'PI20260516-0240', plat:'web', amt:'742.00', mt:'金额不符', sub:'订单 €760 · 差 €18'},
+      {st:'wait', type:'', t:'05-15 20:15', no:'PI20260515-0212', plat:'b2b', amt:'9,800.00', mt:'待关联贸易订单', sub:'需补充合同信息'},
+      {st:'transit', type:'', t:'05-15 15:40', no:'PI20260515-0201', plat:'amazon', amt:'1,560.00', mt:'已匹配订单 · 清算中', sub:'预计明日到账'},
+      {st:'ok', type:'', t:'05-15 13:02', no:'PI20260515-0195', plat:'amazon', amt:'420.00', mt:'已匹配订单 #A-200118', sub:''},
+      {st:'ok', type:'', t:'05-14 18:25', no:'PI20260514-0181', plat:'web', amt:'880.50', mt:'已匹配订单 #W-30221', sub:''},
+      {st:'ok', type:'', t:'05-14 12:10', no:'PI20260514-0169', plat:'tiktok', amt:'215.60', mt:'已匹配订单 #T-90455', sub:''},
+      {st:'ok', type:'', t:'05-13 21:48', no:'PI20260513-0154', plat:'amazon', amt:'1,130.00', mt:'已匹配订单 #A-200090', sub:''},
+      {st:'ok', type:'', t:'05-13 16:33', no:'PI20260513-0148', plat:'web', amt:'305.20', mt:'已匹配订单 #W-30198', sub:''}
+    ],
+    GBP:[
+      {st:'error', type:'nomatch', t:'05-16 11:05', no:'PI20260516-0245', plat:'tiktok', amt:'530.00', mt:'未找到匹配订单', sub:'需人工关联'},
+      {st:'transit', type:'', t:'05-15 17:20', no:'PI20260515-0208', plat:'amazon', amt:'1,840.00', mt:'已匹配订单 · 清算中', sub:'预计今日到账'},
+      {st:'wait', type:'', t:'05-15 14:50', no:'PI20260515-0199', plat:'b2b', amt:'6,200.00', mt:'待关联贸易订单', sub:'需补充合同信息'},
+      {st:'ok', type:'', t:'05-15 10:15', no:'PI20260515-0190', plat:'amazon', amt:'298.00', mt:'已匹配订单 #A-300066', sub:''},
+      {st:'ok', type:'', t:'05-14 19:40', no:'PI20260514-0177', plat:'web', amt:'612.40', mt:'已匹配订单 #W-40133', sub:''},
+      {st:'ok', type:'', t:'05-14 14:22', no:'PI20260514-0166', plat:'amazon', amt:'155.80', mt:'已匹配订单 #A-300041', sub:''},
+      {st:'ok', type:'', t:'05-13 20:08', no:'PI20260513-0151', plat:'tiktok', amt:'89.90', mt:'已匹配订单 #T-91002', sub:''},
+      {st:'ok', type:'', t:'05-13 11:55', no:'PI20260513-0142', plat:'web', amt:'445.00', mt:'已匹配订单 #W-40098', sub:''}
+    ],
+    JPY:[
+      {st:'transit', type:'', t:'05-16 09:50', no:'PI20260516-0238', plat:'amazon', amt:'186,000', mt:'已匹配订单 · 清算中', sub:'预计今日到账'},
+      {st:'ok', type:'', t:'05-15 16:30', no:'PI20260515-0204', plat:'amazon', amt:'42,800', mt:'已匹配订单 #A-400072', sub:''},
+      {st:'ok', type:'', t:'05-15 13:45', no:'PI20260515-0196', plat:'tiktok', amt:'15,600', mt:'已匹配订单 #T-92188', sub:''},
+      {st:'ok', type:'', t:'05-14 20:12', no:'PI20260514-0179', plat:'web', amt:'88,200', mt:'已匹配订单 #W-50166', sub:''},
+      {st:'ok', type:'', t:'05-14 15:08', no:'PI20260514-0168', plat:'amazon', amt:'23,400', mt:'已匹配订单 #A-400055', sub:''},
+      {st:'ok', type:'', t:'05-13 22:30', no:'PI20260513-0156', plat:'amazon', amt:'9,800', mt:'已匹配订单 #A-400030', sub:''},
+      {st:'ok', type:'', t:'05-13 14:20', no:'PI20260513-0145', plat:'tiktok', amt:'31,200', mt:'已匹配订单 #T-92044', sub:''},
+      {st:'ok', type:'', t:'05-12 18:40', no:'PI20260512-0133', plat:'web', amt:'52,600', mt:'已匹配订单 #W-50121', sub:''}
+    ]
+  };
+  const STATUS_META = {
+    ok:{label:'已撮合', color:'#0f7a4d', badge:'green', txt:'ok'},
+    error:{label:'撮合异常', color:'#d11a2a', badge:'red', txt:'bad'},
+    wait:{label:'待关联', color:'#b06a0e', badge:'amber', txt:'wait'},
+    transit:{label:'资金在途', color:'#1f56b0', badge:'blue', txt:'ok'}
+  };
+
+  let F = { ccy:'ALL', status:[], plat:[], type:'', time:'2026年5月' };
+
+  (function readParams(){
+    const p = new URLSearchParams(location.search);
+    if(p.get('ccy') && CCY[p.get('ccy')]) F.ccy = p.get('ccy');
+    if(p.get('status')) F.status = p.get('status').split(',').filter(s=>STATUS_META[s]);
+    if(p.get('type')) F.type = p.get('type');
+    if(p.get('source') && PLAT[p.get('source')]) F.plat = [p.get('source')];
+  })();
+
+  function buildMenus(){
+    let h = '<div class="fopt" onclick="pickCcy(\'ALL\')"><span class="fdot"></span>全部币种</div>';
+    Object.keys(CCY).forEach(k=>{
+      h += `<div class="fopt" onclick="pickCcy('${k}')"><span class="fdot"></span>${CCY[k].name}</div>`;
+    });
+    document.getElementById('menu-ccy').innerHTML = h;
+    h = '';
+    Object.keys(STATUS_META).forEach(k=>{
+      h += `<div class="fopt" data-k="${k}" onclick="toggleMulti('status','${k}')">
+        <span class="fck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <span class="fdot" style="background:${STATUS_META[k].color}"></span>${STATUS_META[k].label}</div>`;
+    });
+    h += `<div class="fmenu-foot"><span class="clr" onclick="clearMulti('status')">清空</span><span class="apl" onclick="closeAll()">完成</span></div>`;
+    document.getElementById('menu-status').innerHTML = h;
+    h = '';
+    Object.keys(PLAT).forEach(k=>{
+      h += `<div class="fopt" data-k="${k}" onclick="toggleMulti('plat','${k}')">
+        <span class="fck"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <span class="fdot" style="background:${PLAT_DOT[k]}"></span>${PLAT[k].n}</div>`;
+    });
+    h += `<div class="fmenu-foot"><span class="clr" onclick="clearMulti('plat')">清空</span><span class="apl" onclick="closeAll()">完成</span></div>`;
+    document.getElementById('menu-plat').innerHTML = h;
+  }
+
+  function toggleMenu(name){
+    const m = document.getElementById('menu-'+name);
+    const wasOpen = m.classList.contains('open');
+    closeAll();
+    if(!wasOpen) m.classList.add('open');
+    event.stopPropagation();
+  }
+  function closeAll(){
+    document.querySelectorAll('.fmenu').forEach(m=>m.classList.remove('open'));
+  }
+  document.addEventListener('click', closeAll);
+
+  function pickCcy(k){ F.ccy = k; closeAll(); render(); }
+  function pickTime(v){ F.time = v; document.getElementById('lbl-time').textContent = v; closeAll(); }
+  function toggleMulti(field, k){
+    const arr = F[field];
+    const i = arr.indexOf(k);
+    if(i>=0) arr.splice(i,1); else arr.push(k);
+    if(field==='status') F.type = '';
+    render(); event.stopPropagation();
+  }
+  function clearMulti(field){ F[field] = []; if(field==='status') F.type=''; render(); event.stopPropagation(); }
+  function resetFilters(){
+    F = { ccy:'ALL', status:[], plat:[], type:'', time:F.time };
+    document.getElementById('searchbox').value = '';
+    render();
+  }
+
+  function render(){
+    const ccyLbl = F.ccy==='ALL' ? '全部币种' : CCY[F.ccy].name;
+    document.getElementById('lbl-ccy').textContent = ccyLbl;
+    document.getElementById('sel-ccy').classList.toggle('act', F.ccy!=='ALL');
+
+    const selStatus = document.getElementById('sel-status');
+    if(F.status.length===0){ document.getElementById('lbl-status').textContent='全部'; selStatus.classList.remove('act'); }
+    else { document.getElementById('lbl-status').textContent = F.status.map(k=>STATUS_META[k].label).join('、'); selStatus.classList.add('act'); }
+
+    const selPlat = document.getElementById('sel-plat');
+    if(F.plat.length===0){ document.getElementById('lbl-plat').textContent='全部'; selPlat.classList.remove('act'); }
+    else { document.getElementById('lbl-plat').textContent = F.plat.map(k=>PLAT[k].n).join('、'); selPlat.classList.add('act'); }
+
+    document.querySelectorAll('#menu-status .fopt').forEach(o=>{
+      o.classList.toggle('sel', F.status.includes(o.dataset.k));
+    });
+    document.querySelectorAll('#menu-plat .fopt').forEach(o=>{
+      o.classList.toggle('sel', F.plat.includes(o.dataset.k));
+    });
+    document.querySelectorAll('#menu-ccy .fopt').forEach((o,idx)=>{
+      const key = idx===0 ? 'ALL' : Object.keys(CCY)[idx-1];
+      o.classList.toggle('sel', F.ccy===key);
+    });
+
+    let rows = [];
+    const ccyList = F.ccy==='ALL' ? Object.keys(CCY) : [F.ccy];
+    ccyList.forEach(c=>{ DATA[c].forEach(r=>rows.push({...r, ccy:c})); });
+
+    const kw = document.getElementById('searchbox').value.trim().toLowerCase();
+    rows = rows.filter(r=>{
+      if(F.status.length && !F.status.includes(r.st)) return false;
+      if(F.type && r.type!==F.type) return false;
+      if(F.plat.length && !F.plat.includes(r.plat)) return false;
+      if(kw && !(r.no.toLowerCase().includes(kw) || r.amt.replace(/,/g,'').includes(kw))) return false;
+      return true;
+    });
+
+    document.getElementById('stat-total').textContent = rows.length;
+    document.getElementById('stat-ok').textContent = rows.filter(r=>r.st==='ok').length;
+    document.getElementById('stat-err').textContent = rows.filter(r=>r.st==='error').length;
+    document.getElementById('stat-wait').textContent = rows.filter(r=>r.st==='wait').length;
+    document.getElementById('stat-transit').textContent = rows.filter(r=>r.st==='transit').length;
+    document.getElementById('batch-count').textContent = rows.length;
+
+    const tb = document.getElementById('tbody');
+    if(rows.length===0){
+      tb.innerHTML = `<tr class="emptyrow"><td colspan="8">
+        <div class="ei"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8a8a93" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        <div class="et">没有符合条件的交易</div>
+        <div class="ed">试试调整筛选条件,或点击「重置筛选」</div></td></tr>`;
+      return;
+    }
+    tb.innerHTML = rows.map((r,i)=>{
+      const sm = STATUS_META[r.st];
+      const p = PLAT[r.plat];
+      const cs = CCY[r.ccy].cs;
+      let btn;
+      if(r.st==='error') btn = '<span class="rowbtn deal">处理</span>';
+      else if(r.st==='wait') btn = '<span class="rowbtn link">关联</span>';
+      else btn = '<span class="rowbtn view">查看</span>';
+      const sub = r.sub ? `<span class="sub">${r.sub}</span>` : '';
+      return `<tr onclick="goDetail('${r.st}','${r.no}')">
+        <td onclick="event.stopPropagation();toggleRow(this,${i})"><div class="ck"></div></td>
+        <td><span class="badge ${sm.badge}"><span class="dot" style="background:${sm.color}"></span>${sm.label}</span></td>
+        <td style="color:var(--ink-2)">${r.t}</td>
+        <td class="ordno">${r.no}</td>
+        <td><span class="plat"><span class="pi" style="background:${p.c}">${p.i}</span>${p.n}</span></td>
+        <td class="amt"><span class="cs">${cs}</span>${r.amt}</td>
+        <td><span class="match-txt ${sm.txt}">${r.mt}${sub}</span></td>
+        <td style="text-align:right;padding-right:20px">${btn}</td>
+      </tr>`;
+    }).join('');
+    picked = new Set();
+    updateSelCount();
+    const ckAll = document.getElementById('ck-all');
+    if(ckAll){ ckAll.classList.remove('on'); ckAll.innerHTML=''; }
+  }
+
+  function goDetail(st, no){
+    window.location.href = 'detail.html?st='+(st||'transit')+'&no='+(no||'');
+  }
+
+  let picked = new Set();
+  function toggleRow(td, i){
+    const ck = td.querySelector('.ck');
+    const tr = td.parentElement;
+    if(picked.has(i)){
+      picked.delete(i); ck.classList.remove('on'); ck.innerHTML=''; tr.classList.remove('picked');
+    } else {
+      picked.add(i); ck.classList.add('on'); tr.classList.add('picked');
+      ck.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg>';
+    }
+    updateSelCount();
+  }
+  function updateSelCount(){ document.getElementById('sel-count').textContent = picked.size; }
+  function toggleAll(){
+    const rows = [...document.querySelectorAll('#tbody tr')].filter(tr=>!tr.classList.contains('emptyrow'));
+    const ckAll = document.getElementById('ck-all');
+    const selectAll = picked.size < rows.length;
+    picked = new Set();
+    rows.forEach((tr,i)=>{
+      const ck = tr.querySelector('.ck');
+      if(selectAll){
+        picked.add(i); ck.classList.add('on'); tr.classList.add('picked');
+        ck.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg>';
+      } else {
+        ck.classList.remove('on'); ck.innerHTML=''; tr.classList.remove('picked');
+      }
+    });
+    if(selectAll){ ckAll.classList.add('on'); ckAll.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg>'; }
+    else { ckAll.classList.remove('on'); ckAll.innerHTML=''; }
+    updateSelCount();
+  }
+
+  let toastTimer;
+  function toast(msg){
+    document.getElementById('toast-msg').textContent = msg;
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+  function batchAction(name){
+    if(picked.size===0){ toast('请先勾选要操作的交易'); return; }
+    toast(name+' · 已对 '+picked.size+' 笔交易执行');
+  }
+  function exportData(){
+    const n = document.getElementById('stat-total').textContent;
+    toast('对账单导出中 · 共 '+n+' 笔(适配主流 ERP 格式)');
+  }
+  function openAI(){ toast('AI 对账助手:可问「这个月哪些交易还没对账」'); }
+
+  buildMenus();
+  render();
+</script>
+<div class="sign-float">方案设计 <b>孙菲璠</b></div>
+</body>
+</html>
