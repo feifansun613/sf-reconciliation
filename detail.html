@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨境收款对账系统 · 交易详情</title>
+<style>
+  :root{
+    --bg:#f4f4f2;--card:#fff;--card-2:#fafafa;
+    --ink-0:#0a0a0c;--ink-1:#18181b;--ink-2:#52525b;--ink-3:#8a8a93;--ink-4:#c4c4ca;
+    --line:#e8e8eb;--line-soft:#f1f1f3;
+    --sf-black:#09090b;--sf-red:#d11a2a;--sf-red-2:#b3151f;
+    --sf-red-soft:#fdf2f3;--sf-red-line:#f5cdd1;
+    --green:#0f7a4d;--green-soft:#e8f5ee;
+    --amber:#b06a0e;--amber-soft:#fbf2dc;
+    --blue:#1f56b0;--blue-soft:#e9f0fa;
+    --r-lg:16px;--r-md:12px;--r-sm:8px;
+    --sh-1:0 1px 2px rgba(15,15,20,.04), 0 0 0 1px rgba(15,15,20,.04);
+    --sh-2:0 8px 24px rgba(15,15,20,.06), 0 1px 2px rgba(15,15,20,.04);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);color:var(--ink-1);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;font-feature-settings:"tnum" on;}
+  .app{display:flex;min-height:100vh;}
+
+  /* Side */
+  .side{width:220px;background:var(--sf-black);color:#fff;flex-shrink:0;display:flex;flex-direction:column;padding:22px 0 18px;position:relative;}
+  .side::before{content:"";position:absolute;left:0;top:0;width:2px;height:48px;background:linear-gradient(180deg,var(--sf-red),transparent);}
+  .brand{display:flex;align-items:center;gap:11px;padding:0 22px 22px;border-bottom:1px solid rgba(255,255,255,.07);}
+  .brand .logo{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.06);overflow:hidden;}
+  .brand .logo img{width:100%;height:100%;object-fit:contain;}
+  .brand .bt{font-size:14px;font-weight:700;letter-spacing:.4px;}
+  .brand .bs{font-size:11px;color:rgba(255,255,255,.42);margin-top:2px;letter-spacing:.3px;}
+  .nav{padding:14px 12px;flex:1;}
+  .nav-label{font-size:10.5px;color:rgba(255,255,255,.32);padding:14px 12px 6px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;color:rgba(255,255,255,.6);font-size:13.5px;cursor:default;margin-bottom:2px;transition:.15s;}
+  .nav-item.clickable{cursor:pointer;}
+  .nav-item.clickable:hover{background:rgba(255,255,255,.05);color:#fff;}
+  .nav-item.active{background:rgba(209,26,42,.95);color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(209,26,42,.32),inset 0 1px 0 rgba(255,255,255,.12);}
+  .nav-item .ic{width:17px;height:17px;flex-shrink:0;}
+  .side-foot{padding:14px 16px;margin:0 8px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:11px;}
+  .side-foot .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#3a3f4c,#1f2128);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;}
+  .side-foot .nm{font-size:12.5px;font-weight:600;}
+  .side-foot .rl{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px;}
+
+  /* Main */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{height:64px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;}
+  .crumb{font-size:13px;color:var(--ink-3);font-weight:500;}
+  .crumb b{color:var(--ink-1);font-weight:600;}
+  .crumb .bk{color:var(--ink-2);cursor:pointer;}
+  .crumb .bk:hover{color:var(--ink-0);text-decoration:underline;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .btn{font-size:13px;border-radius:9px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink-1);display:flex;align-items:center;gap:7px;font-weight:500;transition:.15s;}
+  .btn:hover{border-color:var(--ink-3);}
+  .content{padding:24px 32px 44px;overflow-y:auto;}
+
+  .back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-3);cursor:pointer;margin-bottom:16px;font-weight:500;transition:.15s;}
+  .back:hover{color:var(--ink-0);}
+
+  /* ===== 区域1:核心信息卡 ===== */
+  .head-card{
+    background:linear-gradient(135deg,#fff 0%,#fafafa 100%);
+    border-radius:var(--r-lg);
+    padding:26px 28px;margin-bottom:16px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+    box-shadow:var(--sh-1);
+    position:relative;overflow:hidden;
+  }
+  .head-card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--sf-red) 0%,#ee5946 60%,#f0a050 100%);
+  }
+  .hc-left{flex:1;}
+  .hc-row1{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
+  .hc-amt{
+    font-size:38px;font-weight:800;letter-spacing:-1.2px;
+    font-variant-numeric:tabular-nums;color:var(--ink-0);line-height:1;
+  }
+  .hc-amt .cs{font-size:18px;color:var(--ink-3);font-weight:600;margin-right:4px;letter-spacing:0;}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;letter-spacing:.1px;}
+  .badge.amber{background:var(--amber-soft);color:#8c530a;}
+  .badge.green{background:var(--green-soft);color:#0d6c43;}
+  .badge.red{background:var(--sf-red-soft);color:#a02029;}
+  .badge.blue{background:var(--blue-soft);color:#194691;}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .hc-sub{font-size:12.5px;color:var(--ink-3);font-family:"SF Mono",ui-monospace,Menlo,monospace;letter-spacing:.2px;}
+  .hc-meta{display:flex;gap:36px;margin-top:22px;flex-wrap:wrap;}
+  .hc-meta .mi .ml{font-size:11px;color:var(--ink-3);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;}
+  .hc-meta .mi .mv{font-size:13px;font-weight:600;color:var(--ink-1);}
+  .hc-meta .mi .mv .pi{display:inline-flex;width:19px;height:19px;border-radius:5px;color:#fff;font-size:10px;font-weight:700;align-items:center;justify-content:center;margin-right:6px;vertical-align:-4px;}
+  .hc-right{text-align:right;flex-shrink:0;}
+  .hc-right .stat-lbl{font-size:11px;color:var(--ink-3);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;}
+  .hc-right .stat-big{font-size:17px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:7px;justify-content:flex-end;letter-spacing:-.2px;}
+
+  /* 双栏 */
+  .grid{display:grid;grid-template-columns:1.32fr 1fr;gap:16px;}
+  .section{background:var(--card);border-radius:var(--r-lg);margin-bottom:16px;box-shadow:var(--sh-1);overflow:hidden;}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line-soft);}
+  .sec-head h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px;letter-spacing:-.1px;color:var(--ink-0);}
+  .sec-head .ht{font-size:11.5px;color:var(--ink-3);font-weight:500;}
+  .star{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:6px;
+    background:linear-gradient(135deg,var(--sf-red),#ee5946);color:#fff;
+    box-shadow:0 3px 8px rgba(209,26,42,.32);
+  }
+
+  /* ===== 时间线 ===== */
+  .timeline{padding:22px 26px 24px;}
+  .tl-item{display:flex;gap:16px;position:relative;padding-bottom:24px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-line{position:absolute;left:14px;top:30px;bottom:-4px;width:2px;background:var(--line);}
+  .tl-item.done .tl-line{background:linear-gradient(180deg,var(--green),var(--green));}
+  .tl-item.current .tl-line{background:linear-gradient(180deg,var(--blue),var(--line) 80%);}
+  .tl-item:last-child .tl-line{display:none;}
+  .tl-node{
+    width:30px;height:30px;border-radius:50%;flex-shrink:0;z-index:1;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;border:2px solid var(--line);
+  }
+  .tl-item.done .tl-node{background:var(--green);border-color:var(--green);box-shadow:0 2px 6px rgba(15,122,77,.2);}
+  .tl-item.current .tl-node{
+    background:var(--blue);border-color:var(--blue);
+    box-shadow:0 0 0 5px var(--blue-soft),0 4px 10px rgba(31,86,176,.28);
+  }
+  .tl-item.current .tl-node::before{
+    content:"";position:absolute;width:30px;height:30px;border-radius:50%;
+    background:var(--blue);opacity:.4;animation:tlpulse 1.8s infinite ease-out;
+  }
+  @keyframes tlpulse{0%{transform:scale(1);opacity:.45;}100%{transform:scale(1.6);opacity:0;}}
+  .tl-item.future .tl-node{border-style:dashed;background:#fafbfc;}
+  .tl-body{flex:1;padding-top:2px;}
+  .tl-t{font-size:13.5px;font-weight:600;color:var(--ink-1);letter-spacing:-.1px;}
+  .tl-item.future .tl-t{color:var(--ink-3);font-weight:500;}
+  .tl-d{font-size:12px;color:var(--ink-3);margin-top:3px;}
+  .tl-time{font-size:11.5px;color:var(--ink-4);font-variant-numeric:tabular-nums;margin-top:4px;letter-spacing:.2px;}
+  .tl-now{
+    font-size:10.5px;font-weight:700;color:var(--blue);background:var(--blue-soft);
+    padding:2px 8px;border-radius:99px;margin-left:8px;letter-spacing:.4px;
+  }
+  .tl-amt{
+    font-size:12.5px;font-weight:700;color:var(--green);float:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .tl-eta{
+    margin-top:18px;background:var(--blue-soft);border-radius:11px;
+    padding:13px 15px;display:flex;align-items:center;gap:11px;
+    border:1px solid #d6e2f4;
+  }
+  .tl-eta svg{flex-shrink:0;}
+  .tl-eta .et{font-size:12.5px;color:#194691;line-height:1.55;}
+  .tl-eta .et b{font-weight:700;}
+
+  /* ===== 撮合 + 拆解 ===== */
+  .match-body{padding:18px 22px;}
+  .mrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-size:13px;}
+  .mrow .ml{color:var(--ink-3);font-weight:500;}
+  .mrow .mv{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-1);}
+  .mrow .mv .link{color:var(--blue);cursor:pointer;}
+  .mrow .mv .link:hover{text-decoration:underline;}
+  .mdiv{height:1px;background:var(--line-soft);margin:4px 0;}
+  .breakdown{
+    margin-top:14px;background:linear-gradient(180deg,#fafbfc,#f6f7f9);
+    border:1px solid var(--line);border-radius:11px;padding:15px 16px;
+  }
+  .bd-title{
+    font-size:12px;font-weight:700;color:var(--ink-1);
+    margin-bottom:11px;display:flex;align-items:center;gap:7px;letter-spacing:-.1px;
+  }
+  .bd-row{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;}
+  .bd-row .bl{color:var(--ink-2);}
+  .bd-row .bv{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-1);}
+  .bd-row .bv.minus{color:var(--sf-red);}
+  .bd-total{
+    display:flex;justify-content:space-between;font-size:13.5px;
+    padding-top:10px;margin-top:6px;border-top:1px dashed var(--line);font-weight:700;
+  }
+  .bd-total .bv{font-variant-numeric:tabular-nums;color:var(--ink-0);}
+
+  /* 操作 */
+  .ops{display:flex;gap:10px;padding:18px 22px;border-top:1px solid var(--line-soft);background:var(--card-2);}
+  .ops .btn-lg{
+    font-size:13px;padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:500;
+    border:1px solid var(--line);background:#fff;color:var(--ink-1);
+    display:flex;align-items:center;gap:7px;transition:.15s;
+  }
+  .ops .btn-lg:hover{border-color:var(--ink-3);}
+  .ops .btn-lg.dark{
+    background:linear-gradient(180deg,#1c1c20,var(--sf-black));color:#fff;border-color:var(--sf-black);
+    box-shadow:0 4px 12px rgba(0,0,0,.18);
+  }
+  .ops .btn-lg.dark:hover{opacity:.95;}
+  .btn-lg.done{background:var(--green-soft) !important;color:#0d6c43 !important;border-color:#bfe3cd !important;cursor:default;box-shadow:none !important;}
+
+  /* ===== 异常面板 ===== */
+  .err-panel{
+    background:linear-gradient(135deg,var(--sf-red-soft) 0%,#fff5f5 100%);
+    border:1px solid var(--sf-red-line);
+    border-radius:var(--r-lg);padding:20px 22px;margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(209,26,42,.06);
+  }
+  .err-head{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#a02029;margin-bottom:8px;letter-spacing:-.1px;}
+  .err-head .eh-ic{
+    width:30px;height:30px;border-radius:9px;background:var(--sf-red);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px rgba(209,26,42,.3);
+  }
+  .err-desc{font-size:13px;color:var(--ink-2);line-height:1.65;}
+  .err-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+  .err-btn{
+    font-size:13px;font-weight:600;padding:9px 17px;border-radius:9px;cursor:pointer;
+    border:1px solid transparent;display:flex;align-items:center;gap:7px;transition:.15s;
+  }
+  .err-btn.primary{
+    background:linear-gradient(180deg,#e02434,var(--sf-red));color:#fff;
+    box-shadow:0 6px 16px rgba(209,26,42,.3);
+  }
+  .err-btn.primary:hover{box-shadow:0 8px 20px rgba(209,26,42,.42);transform:translateY(-1px);}
+  .err-btn.ghost{background:#fff;border-color:var(--line);color:var(--ink-1);}
+  .err-btn.ghost:hover{background:var(--card-2);border-color:var(--ink-3);}
+
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+  .cmp-box{background:#fff;border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+  .cmp-box.bad{border-color:var(--sf-red-line);background:linear-gradient(180deg,#fff,#fef7f8);}
+  .cmp-lbl{font-size:11px;color:var(--ink-3);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;}
+  .cmp-val{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-0);letter-spacing:-.5px;}
+  .cmp-box.bad .cmp-val{color:var(--sf-red);}
+  .cmp-diff{
+    grid-column:1/-1;text-align:center;font-size:12.5px;color:var(--ink-2);font-weight:500;
+    background:#fff;border:1px dashed var(--line);border-radius:9px;padding:10px;
+  }
+  .cmp-diff b{color:var(--sf-red);font-weight:700;}
+
+  /* 结论卡内置 */
+  .concl{padding:18px 22px;display:flex;gap:12px;align-items:flex-start;}
+  .concl .ci{
+    width:36px;height:36px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .concl .ci.green{background:var(--green-soft);}
+  .concl .ci.red{background:var(--sf-red-soft);}
+  .concl .ct{font-size:13.5px;font-weight:700;color:var(--ink-0);letter-spacing:-.1px;}
+  .concl .cd{font-size:12.5px;color:var(--ink-3);margin-top:4px;line-height:1.65;}
+
+  .reveal{opacity:0;transform:translateY(10px);animation:rise .5s ease forwards;}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+  .d1{animation-delay:.04s;}.d2{animation-delay:.12s;}.d3{animation-delay:.2s;}.d4{animation-delay:.28s;}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);background:var(--sf-black);color:#fff;font-size:13px;padding:12px 22px;border-radius:11px;z-index:999;box-shadow:0 12px 32px rgba(0,0,0,.22);display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.26s ease;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .ti{width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+  .sign-float{position:fixed;right:18px;bottom:14px;z-index:900;font-size:11px;color:var(--ink-4);pointer-events:none;}
+  .sign-float b{color:var(--ink-3);font-weight:600;}
+  svg{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><img src="assets/sf-logo-round.png" alt="SF"></div>
+      <div><div class="bt">顺丰跨境支付</div><div class="bs">商户工作台</div></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">资金管理</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>账户总览</div>
+      <div class="nav-item active clickable" onclick="goHome()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>对账中心</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>结售汇</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>收付款</div>
+      <div class="nav-label">经营</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>数据报表</div>
+      <div class="nav-item"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>设置</div>
+    </nav>
+    <div class="side-foot">
+      <div class="av">孙</div>
+      <div><div class="nm">跨境贸易公司名称</div><div class="rl">财务负责人</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb"><span class="bk" onclick="goHome()">对账工作台</span> / <span class="bk" onclick="goList()">对账明细</span> / <b>交易详情</b></div>
+      <div class="topbar-right">
+        <div class="btn" onclick="exportVoucher()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>导出凭证</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="back" onclick="goList()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回对账明细
+      </div>
+
+      <!-- 核心信息卡 -->
+      <div class="head-card reveal d1">
+        <div class="hc-left">
+          <div class="hc-row1">
+            <div class="hc-amt"><span class="cs">$</span><span id="hc-amt">2,150.00</span></div>
+            <span class="badge amber" id="hc-badge"><span class="dot" style="background:#b06a0e"></span>资金在途 · 清算中</span>
+          </div>
+          <div class="hc-sub">交易流水号 · <span id="hc-no">PI20260515-0198</span></div>
+          <div class="hc-meta">
+            <div class="mi">
+              <div class="ml">来源平台</div>
+              <div class="mv"><span class="pi" style="background:linear-gradient(135deg,#ff9900,#e88200)">A</span>亚马逊美国站</div>
+            </div>
+            <div class="mi">
+              <div class="ml">付款方</div>
+              <div class="mv">Amazon Payments</div>
+            </div>
+            <div class="mi">
+              <div class="ml">交易时间</div>
+              <div class="mv">2026-05-15 16:05</div>
+            </div>
+            <div class="mi">
+              <div class="ml">收款币种</div>
+              <div class="mv">USD 美元</div>
+            </div>
+          </div>
+        </div>
+        <div class="hc-right" id="hc-right">
+          <div class="stat-lbl">预计到账</div>
+          <div class="stat-big">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            今日 18:00 前
+          </div>
+        </div>
+      </div>
+
+      <div id="err-slot"></div>
+
+      <div class="grid" id="main-grid">
+        <!-- 左:在途追踪时间线 -->
+        <div>
+          <div class="section reveal d2">
+            <div class="sec-head">
+              <h2><span class="star"><svg width="11" height="11" viewBox="0 0 24 24" fill="#fff"><path d="M12 .587l3.668 7.568L24 9.423l-6 5.847 1.42 8.281L12 19.74l-7.42 3.81L6 15.27 0 9.423l8.332-1.268z"/></svg></span> 资金在途追踪</h2>
+              <span class="ht">这笔钱的完整流转路径</span>
+            </div>
+            <div class="timeline">
+              <div class="tl-item done">
+                <div class="tl-line"></div>
+                <div class="tl-node">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div class="tl-body">
+                  <div class="tl-t">买家在亚马逊完成付款 <span class="tl-amt">$2,150.00</span></div>
+                  <div class="tl-d">消费者使用 Visa 信用卡支付</div>
+                  <div class="tl-time">2026-05-15 16:05:22</div>
+                </div>
+              </div>
+              <div class="tl-item done">
+                <div class="tl-line"></div>
+                <div class="tl-node">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div class="tl-body">
+                  <div class="tl-t">Visa 国际卡组织清算完成</div>
+                  <div class="tl-d">跨境清算网络处理</div>
+                  <div class="tl-time">2026-05-15 16:05:48</div>
+                </div>
+              </div>
+              <div class="tl-item done">
+                <div class="tl-line"></div>
+                <div class="tl-node">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div class="tl-body">
+                  <div class="tl-t">收单机构入账</div>
+                  <div class="tl-d">海外收单行确认收款</div>
+                  <div class="tl-time">2026-05-15 16:08:10</div>
+                </div>
+              </div>
+              <div class="tl-item current">
+                <div class="tl-line"></div>
+                <div class="tl-node">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
+                </div>
+                <div class="tl-body">
+                  <div class="tl-t">顺丰跨境支付平台清算中<span class="tl-now">当前</span></div>
+                  <div class="tl-d">资金归集与多币种入账处理中</div>
+                  <div class="tl-time">2026-05-16 09:30 更新</div>
+                </div>
+              </div>
+              <div class="tl-item future">
+                <div class="tl-line"></div>
+                <div class="tl-node"></div>
+                <div class="tl-body">
+                  <div class="tl-t">入账商户美元子账户</div>
+                  <div class="tl-d">资金可用于结售汇 / 提现</div>
+                  <div class="tl-time">预计 2026-05-16 18:00 前</div>
+                </div>
+              </div>
+              <div class="tl-item future">
+                <div class="tl-node"></div>
+                <div class="tl-body">
+                  <div class="tl-t">可发起结售汇或提现</div>
+                  <div class="tl-d">由你按需操作</div>
+                </div>
+              </div>
+              <div class="tl-eta">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f56b0" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <div class="et">这笔资金当前清算进度<b>正常</b>,预计 <b>今日 18:00 前</b>到账。如出现延迟,系统将自动核查并通知你。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右:撮合 + 拆解 + 结论 -->
+        <div>
+          <div class="section reveal d3" style="margin-bottom:16px;">
+            <div class="sec-head">
+              <h2>对账撮合详情</h2>
+            </div>
+            <div class="match-body">
+              <div class="mrow"><span class="ml">撮合状态</span><span class="mv" style="color:var(--green)">✓ 已自动匹配订单</span></div>
+              <div class="mdiv"></div>
+              <div class="mrow"><span class="ml">关联订单号</span><span class="mv"><span class="link">#A-100198 ›</span></span></div>
+              <div class="mrow"><span class="ml">订单金额</span><span class="mv">$2,182.10</span></div>
+              <div class="mrow"><span class="ml">实际到账</span><span class="mv">$2,150.00</span></div>
+
+              <div class="breakdown">
+                <div class="bd-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  到账金额为何少了 $32.10?
+                </div>
+                <div class="bd-row"><span class="bl">订单金额</span><span class="bv">$2,182.10</span></div>
+                <div class="bd-row"><span class="bl">平台跨境收款手续费 (1.2%)</span><span class="bv minus">− $26.18</span></div>
+                <div class="bd-row"><span class="bl">国际卡组织通道费</span><span class="bv minus">− $5.92</span></div>
+                <div class="bd-total"><span>实际到账</span><span class="bv">$2,150.00</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section reveal d4">
+            <div class="sec-head">
+              <h2>对账结论</h2>
+            </div>
+            <div class="concl">
+              <div class="ci green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f7a4d" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <div>
+                <div class="ct">账实相符,差额已说明</div>
+                <div class="cd">订单金额与到账金额的 $32.10 差额,已确认为手续费与通道费,属正常扣除。本笔交易无需申诉。</div>
+              </div>
+            </div>
+            <div class="ops">
+              <div class="btn-lg dark" id="mark-btn" onclick="markDone(this)">标记已对账</div>
+              <div class="btn-lg" onclick="raiseQuestion()">对此笔有疑问</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="ti"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>
+  <span id="toast-msg">操作成功</span>
+</div>
+
+<script>
+  function goHome(){ window.location.href='index.html'; }
+  function goList(){ window.location.href='list.html'; }
+
+  let toastTimer;
+  function toast(msg){
+    document.getElementById('toast-msg').textContent = msg;
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+  }
+  function markDone(btn){
+    btn.classList.add('done');
+    btn.textContent = '✓ 已对账';
+    btn.onclick = null;
+    toast('本笔交易已标记为已对账');
+  }
+  function raiseQuestion(){ toast('已记录你的疑问 · 顺丰客服将在 1 个工作日内联系'); }
+  function exportVoucher(){ toast('对账凭证导出中 · 含交易明细与资金流转记录'); }
+
+  const P = new URLSearchParams(location.search);
+  const ST = P.get('st') || 'transit';
+  const NO = P.get('no') || 'PI20260515-0198';
+  document.getElementById('hc-no').textContent = NO;
+
+  // 撮合异常 - 金额不符
+  if(ST === 'error'){
+    document.getElementById('hc-amt').textContent = '1,288.00';
+    document.getElementById('hc-badge').className = 'badge red';
+    document.getElementById('hc-badge').innerHTML =
+      '<span class="dot" style="background:#d11a2a"></span>撮合异常 · 待处理';
+    document.getElementById('hc-right').innerHTML =
+      '<div class="stat-lbl">异常类型</div>' +
+      '<div class="stat-big" style="color:var(--sf-red)">金额不符</div>';
+
+    document.getElementById('err-slot').innerHTML = `
+      <div class="err-panel reveal d1">
+        <div class="err-head">
+          <span class="eh-ic">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+          </span>
+          到账金额与订单金额不符
+        </div>
+        <div class="err-desc">系统检测到本笔交易的实际到账金额低于订单应收金额,差额超出正常手续费范围,需人工核实。可能原因:买家部分退款、平台促销补贴差异、或汇率波动。</div>
+        <div class="cmp">
+          <div class="cmp-box"><div class="cmp-lbl">订单应收金额</div><div class="cmp-val">$1,320.00</div></div>
+          <div class="cmp-box bad"><div class="cmp-lbl">实际到账金额</div><div class="cmp-val">$1,288.00</div></div>
+          <div class="cmp-diff"><b>差额 $32.00</b> · 超出手续费正常区间,需核实</div>
+        </div>
+        <div class="err-actions">
+          <div class="err-btn primary" onclick="toast('差额申诉已提交 · 系统将自动附带对账凭证')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            发起差额申诉
+          </div>
+          <div class="err-btn ghost" onclick="toast('请在弹出的订单列表中选择正确订单')">手动关联订单</div>
+          <div class="err-btn ghost" onclick="toast('已标记为正常差额 · 本笔交易完成对账')">标记为正常差额</div>
+        </div>
+      </div>`;
+
+    document.getElementById('main-grid').innerHTML = `
+      <div>
+        <div class="section reveal d2">
+          <div class="sec-head"><h2>对账撮合详情</h2></div>
+          <div class="match-body">
+            <div class="mrow"><span class="ml">撮合状态</span><span class="mv" style="color:var(--sf-red)">✗ 金额校验未通过</span></div>
+            <div class="mdiv"></div>
+            <div class="mrow"><span class="ml">关联订单号</span><span class="mv"><span class="link" style="color:var(--blue)">#A-100231 ›</span></span></div>
+            <div class="mrow"><span class="ml">订单应收</span><span class="mv">$1,320.00</span></div>
+            <div class="mrow"><span class="ml">实际到账</span><span class="mv" style="color:var(--sf-red)">$1,288.00</span></div>
+            <div class="breakdown">
+              <div class="bd-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d11a2a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                差额 $32.00 拆解
+              </div>
+              <div class="bd-row"><span class="bl">订单应收金额</span><span class="bv">$1,320.00</span></div>
+              <div class="bd-row"><span class="bl">平台跨境收款手续费 (1.2%)</span><span class="bv minus">− $15.84</span></div>
+              <div class="bd-row"><span class="bl">国际卡组织通道费</span><span class="bv minus">− $4.16</span></div>
+              <div class="bd-row"><span class="bl">未说明差额 · 需核实</span><span class="bv minus">− $12.00</span></div>
+              <div class="bd-total"><span>实际到账</span><span class="bv">$1,288.00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section reveal d3">
+          <div class="sec-head"><h2>处理建议</h2></div>
+          <div class="concl">
+            <div class="ci red">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d11a2a" stroke-width="2.5"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div>
+              <div class="ct">存在 $12.00 未说明差额</div>
+              <div class="cd">扣除手续费与通道费后仍有 $12.00 差额。建议先核对该订单是否发生过部分退款;若确认异常,可一键向平台发起差额申诉,系统将自动附带对账凭证。</div>
+            </div>
+          </div>
+          <div class="ops">
+            <div class="btn-lg dark" onclick="toast('差额申诉已提交')">发起差额申诉</div>
+            <div class="btn-lg" onclick="goList()">返回明细</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // 待关联
+  else if(ST === 'wait'){
+    document.getElementById('hc-amt').textContent = '12,400.00';
+    document.getElementById('hc-badge').className = 'badge amber';
+    document.getElementById('hc-badge').innerHTML =
+      '<span class="dot" style="background:#b06a0e"></span>待关联贸易订单';
+    document.getElementById('hc-right').innerHTML =
+      '<div class="stat-lbl">待办</div>' +
+      '<div class="stat-big" style="color:var(--amber)">需补充订单信息</div>';
+
+    document.getElementById('err-slot').innerHTML = `
+      <div class="err-panel reveal d1" style="background:linear-gradient(135deg,var(--amber-soft) 0%,#fff8ec 100%);border-color:#f0dcb4;box-shadow:0 8px 24px rgba(176,106,14,.06);">
+        <div class="err-head" style="color:#8c530a;">
+          <span class="eh-ic" style="background:var(--amber);box-shadow:0 3px 8px rgba(176,106,14,.3)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          </span>
+          这笔收款尚未关联贸易订单
+        </div>
+        <div class="err-desc" style="color:#7a4d0a;">B2B 外贸收款金额较大,系统无法自动撮合到对应订单,需要你手动关联贸易合同与报关信息,以便完成对账并支持后续结售汇。</div>
+        <div class="err-actions">
+          <div class="err-btn primary" style="background:linear-gradient(180deg,#c27510,var(--amber));box-shadow:0 6px 16px rgba(176,106,14,.3)" onclick="toast('请选择对应的贸易合同进行关联')">关联贸易订单</div>
+          <div class="err-btn ghost" style="border-color:#e6d3a8;color:#8c530a;" onclick="toast('请选择报关单文件上传')">上传报关单</div>
+        </div>
+      </div>`;
+
+    document.getElementById('main-grid').innerHTML = `
+      <div>
+        <div class="section reveal d2">
+          <div class="sec-head"><h2>收款信息</h2></div>
+          <div class="match-body">
+            <div class="mrow"><span class="ml">撮合状态</span><span class="mv" style="color:var(--amber)">待人工关联</span></div>
+            <div class="mdiv"></div>
+            <div class="mrow"><span class="ml">收款金额</span><span class="mv">$12,400.00</span></div>
+            <div class="mrow"><span class="ml">来源</span><span class="mv">B2B 外贸收款</span></div>
+            <div class="mrow"><span class="ml">付款方</span><span class="mv">海外采购商电汇</span></div>
+            <div class="mrow"><span class="ml">需补充</span><span class="mv" style="color:var(--amber)">贸易合同 / 报关单号</span></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section reveal d3">
+          <div class="sec-head"><h2>关联指引</h2></div>
+          <div style="padding:18px 22px;font-size:12.5px;color:var(--ink-2);line-height:1.75;">
+            完成关联需要:① 选择对应的贸易合同;② 填写报关单号;③ 确认收款用途。关联完成后,该笔交易将自动标记为已对账,并可用于结售汇额度核算。
+          </div>
+          <div class="ops">
+            <div class="btn-lg dark" onclick="toast('贸易订单关联成功 · 本笔已完成对账')">立即关联</div>
+            <div class="btn-lg" onclick="goList()">返回明细</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  // 已撮合
+  else if(ST === 'ok'){
+    document.getElementById('hc-amt').textContent = '88.00';
+    document.getElementById('hc-badge').className = 'badge green';
+    document.getElementById('hc-badge').innerHTML =
+      '<span class="dot" style="background:#0f7a4d"></span>已撮合 · 对账完成';
+    document.getElementById('hc-right').innerHTML =
+      '<div class="stat-lbl">对账状态</div>' +
+      '<div class="stat-big" style="color:var(--green)">账实相符</div>';
+
+    document.getElementById('main-grid').innerHTML = `
+      <div>
+        <div class="section reveal d2">
+          <div class="sec-head"><h2>对账撮合详情</h2></div>
+          <div class="match-body">
+            <div class="mrow"><span class="ml">撮合状态</span><span class="mv" style="color:var(--green)">✓ 系统自动撮合成功</span></div>
+            <div class="mdiv"></div>
+            <div class="mrow"><span class="ml">关联订单号</span><span class="mv"><span class="link" style="color:var(--blue)">#A-100231 ›</span></span></div>
+            <div class="mrow"><span class="ml">订单应收</span><span class="mv">$88.00</span></div>
+            <div class="mrow"><span class="ml">实际到账</span><span class="mv">$88.00</span></div>
+            <div class="breakdown">
+              <div class="bd-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f7a4d" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+                金额核对
+              </div>
+              <div class="bd-row"><span class="bl">订单应收金额</span><span class="bv">$88.00</span></div>
+              <div class="bd-row"><span class="bl">平台手续费</span><span class="bv">已含</span></div>
+              <div class="bd-total"><span>实际到账</span><span class="bv">$88.00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section reveal d3">
+          <div class="sec-head"><h2>对账结论</h2></div>
+          <div class="concl">
+            <div class="ci green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f7a4d" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="ct">账实相符,对账已完成</div>
+              <div class="cd">该笔交易已由系统自动撮合到对应订单,订单金额与到账金额一致,无需人工处理。</div>
+            </div>
+          </div>
+          <div class="ops">
+            <div class="btn-lg dark" onclick="exportVoucher()">导出对账凭证</div>
+            <div class="btn-lg" onclick="goList()">返回明细</div>
+          </div>
+        </div>
+      </div>`;
+  }
+</script>
+<div class="sign-float">方案设计 <b>孙菲璠</b></div>
+</body>
+</html>
